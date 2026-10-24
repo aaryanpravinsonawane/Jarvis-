@@ -1,0 +1,144 @@
+/* =============================================
+   JARVIS — Design System
+   Dark sci-fi HUD · Cyan / Ice-Blue accents
+   ============================================= */
+
+:root {
+  /* Backgrounds */
+  --j-bg-primary: #080c14;
+  --j-bg-secondary: #0c1220;
+  --j-bg-surface: rgba(10, 16, 28, 0.85);
+  --j-bg-surface-hover: rgba(16, 24, 42, 0.9);
+  --j-bg-glass: rgba(8, 12, 20, 0.6);
+
+  /* Borders */
+  --j-border: rgba(0, 180, 220, 0.12);
+  --j-border-active: rgba(0, 212, 255, 0.3);
+  --j-border-glow: rgba(0, 212, 255, 0.5);
+
+  /* Accent — cyan */
+  --j-cyan: #00d4ff;
+  --j-cyan-dim: rgba(0, 212, 255, 0.5);
+  --j-cyan-subtle: rgba(0, 212, 255, 0.12);
+  --j-cyan-glow: 0 0 20px rgba(0, 212, 255, 0.3);
+
+  /* Text */
+  --j-text-primary: rgba(255, 255, 255, 0.92);
+  --j-text-secondary: rgba(160, 180, 200, 0.7);
+  --j-text-muted: rgba(120, 140, 160, 0.45);
+  --j-text-accent: var(--j-cyan);
+
+  /* Typography */
+  --j-font-body: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --j-font-display: 'Orbitron', 'Inter', sans-serif;
+  --j-font-mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+
+  /* Spacing */
+  --j-space-xs: 4px;
+  --j-space-sm: 8px;
+  --j-space-md: 16px;
+  --j-space-lg: 24px;
+  --j-space-xl: 32px;
+  --j-space-2xl: 48px;
+
+  /* Radius */
+  --j-radius-sm: 6px;
+  --j-radius-md: 10px;
+  --j-radius-lg: 16px;
+  --j-radius-full: 9999px;
+
+  /* Transitions */
+  --j-transition-fast: 150ms ease;
+  --j-transition-normal: 300ms ease;
+  --j-transition-slow: 600ms ease;
+
+  /* Z-layers */
+  --j-z-base: 1;
+  --j-z-overlay: 10;
+  --j-z-nav: 20;
+  --j-z-modal: 30;
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--j-font-body);
+  color: var(--j-text-primary);
+  background: var(--j-bg-primary);
+  line-height: 1.5;
+  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--j-border-active);
+  border-radius: var(--j-radius-full);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--j-cyan-dim); }
+
+/* ---------- Selection ---------- */
+::selection {
+  background: rgba(0, 212, 255, 0.25);
+  color: #fff;
+}
+
+/* ---------- Focus ---------- */
+:focus-visible {
+  outline: 2px solid var(--j-cyan);
+  outline-offset: 2px;
+}
+
+/* ---------- Button reset ---------- */
+button {
+  font-family: var(--j-font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---------- Utility keyframes ---------- */
+@keyframes j-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes j-fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes j-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(0, 212, 255, 0.15); }
+  50%      { box-shadow: 0 0 22px rgba(0, 212, 255, 0.35); }
+}

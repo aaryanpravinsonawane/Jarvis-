@@ -1,0 +1,32 @@
+.waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 28px;
+  padding: 0 var(--j-space-xl);
+  opacity: 0.25;
+  transition: opacity var(--j-transition-slow);
+  flex-shrink: 0;
+}
+
+.waveform--active {
+  opacity: 1;
+}
+
+.waveform__bar {
+  width: 2.5px;
+  height: 4px;
+  background: var(--j-cyan);
+  border-radius: 2px;
+}
+
+.waveform--active .waveform__bar {
+  animation: wf-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes wf-pulse {
+  0%   { height: 3px; opacity: 0.4; }
+  50%  { height: var(--bar-h, 50%); opacity: 1; }
+  100% { height: 3px; opacity: 0.4; }
+}

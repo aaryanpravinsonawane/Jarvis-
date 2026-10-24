@@ -1,0 +1,32 @@
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 14px;
+  border-radius: var(--j-radius-full);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid color-mix(in srgb, var(--badge-color, #00d4ff) 30%, transparent);
+  font-family: var(--j-font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  user-select: none;
+  color: var(--badge-color, #00d4ff);
+  transition:
+    color var(--j-transition-normal),
+    border-color var(--j-transition-normal);
+}
+
+.status-badge__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--badge-color, #00d4ff);
+  animation: j-pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.status-badge__label {
+  white-space: nowrap;
+}
