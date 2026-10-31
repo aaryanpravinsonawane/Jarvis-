@@ -1,0 +1,105 @@
+/* ── Command Input ── */
+.command-input {
+  width: 100%;
+  max-width: 520px;
+  margin-top: var(--j-space-xs);
+  flex-shrink: 0;
+}
+
+.command-input__wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--j-bg-surface);
+  border: 1px solid var(--j-border);
+  border-radius: var(--j-radius-md);
+  padding: 10px 14px;
+  transition:
+    border-color var(--j-transition-fast),
+    box-shadow var(--j-transition-fast);
+}
+
+.command-input__wrapper:focus-within {
+  border-color: var(--j-border-active);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.08);
+}
+
+.command-input__prompt {
+  font-family: var(--j-font-mono);
+  font-size: 14px;
+  color: var(--j-cyan-dim);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.command-input__field {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-family: var(--j-font-mono);
+  font-size: 13px;
+  color: var(--j-text-primary);
+  caret-color: var(--j-cyan);
+  letter-spacing: 0.3px;
+}
+
+.command-input__field::placeholder {
+  color: var(--j-text-muted);
+  font-family: var(--j-font-body);
+  font-style: italic;
+  letter-spacing: 0;
+}
+
+.command-input__field:disabled {
+  opacity: 0.5;
+}
+
+.command-input__send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--j-radius-sm);
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid var(--j-border);
+  color: var(--j-cyan-dim);
+  flex-shrink: 0;
+  transition:
+    background var(--j-transition-fast),
+    color var(--j-transition-fast),
+    border-color var(--j-transition-fast);
+}
+
+.command-input__send:hover:not(:disabled) {
+  background: rgba(0, 212, 255, 0.2);
+  border-color: var(--j-border-active);
+  color: var(--j-cyan);
+}
+
+.command-input__send:disabled {
+  opacity: 0.3;
+}
+
+.command-input__hint {
+  text-align: center;
+  font-size: 10px;
+  font-family: var(--j-font-display);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--j-text-muted);
+  margin-top: 8px;
+}
+
+/* ── mobile ── */
+@media (max-width: 768px) {
+  .command-input {
+    max-width: 100%;
+    margin-top: var(--j-space-xs);
+  }
+
+  .command-input__wrapper {
+    padding: 8px 12px;
+  }
+}

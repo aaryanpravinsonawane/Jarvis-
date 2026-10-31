@@ -111,9 +111,9 @@ function WireframeGlobe({ cfg, state }: { cfg: StateConfig; state: AssistantStat
 /* ── Concentric Torus Rings ── */
 function OrbitalRings({ cfg }: { cfg: StateConfig }) {
   const rings = useMemo(() => [
-    { radius: 1.3,  tube: 0.01, tiltX: 0.5,  tiltZ: 0.1,  speedMul: 1.0,   opacity: 0.35, segments: 3 },
-    { radius: 1.52, tube: 0.008, tiltX: -0.3, tiltZ: -0.15, speedMul: -0.7,  opacity: 0.25, segments: 4 },
-    { radius: 1.72, tube: 0.006, tiltX: 0.2,  tiltZ: 0.25, speedMul: 0.45,  opacity: 0.18, segments: 5 },
+    { radius: 1.12, tube: 0.012, tiltX: 0.30,  tiltZ: 0.08,  speedMul:  1.0,  opacity: 0.40, segments: 3 },
+    { radius: 1.23, tube: 0.009, tiltX: -0.20, tiltZ: -0.12, speedMul: -0.65, opacity: 0.30, segments: 4 },
+    { radius: 1.34, tube: 0.007, tiltX:  0.14, tiltZ:  0.22, speedMul:  0.50, opacity: 0.22, segments: 5 },
   ], []);
 
   return (
@@ -149,12 +149,13 @@ function RingSegmented({
   const segAngle = (Math.PI * 2) / segments;
   const arcAngle = segAngle * (1 - gapFrac);
 
-  /* Create pre-rotated torus geometries so arcs distribute evenly */
+  /* Create pre-rotated torus geometries so arcs distribute evenly.
+     TorusGeometry lies in the XY plane; rotating around Z places each
+     arc in its correct angular slot around the equator. */
   const segmentGeometries = useMemo(() => {
     return Array.from({ length: segments }, (_, i) => {
       const geo = new THREE.TorusGeometry(radius, tube, 8, 48, arcAngle);
-      // Rotate the geometry itself so each arc sits in its correct slot
-      geo.rotateY(i * segAngle);
+      geo.rotateZ(i * segAngle);
       return geo;
     });
   }, [radius, tube, arcAngle, segAngle, segments]);
@@ -183,52 +184,60 @@ function RingSegmented({
 /* ── Multi-Layer Glowing Core ── */
 function GlowingCore({ cfg }: { cfg: StateConfig }) {
   const outerRef = useRef<THREE.Mesh>(null!);
-  const midRef = useRef<THREE.Mesh>(null!);
+  const midRef   = useRef<THREE.Mesh>(null!);
+  const cyanRef  = useRef<THREE.Mesh>(null!);
   const innerRef = useRef<THREE.Mesh>(null!);
-  const lightRef = useRef<THREE.PointLight>(null!);
+  const lightRef  = useRef<THREE.PointLight>(null!);
   const light2Ref = useRef<THREE.PointLight>(null!);
 
   useFrame((s) => {
     const t = s.clock.elapsedTime;
-    const pulse = 1 + Math.sin(t * 2.5) * 0.15 * cfg.pulseIntensity;
+    const pulse   = 1 + Math.sin(t * 2.5) * 0.15 * cfg.pulseIntensity;
     const breathe = 1 + Math.sin(t * 1.2) * 0.06;
 
-    // Outer glow layer
+    // Outer diffuse glow
     if (outerRef.current) {
-      outerRef.current.scale.setScalar(0.45 * cfg.coreScale * pulse * breathe);
+      outerRef.current.scale.setScalar(0.44 * cfg.coreScale * pulse * breathe);
       const mat = outerRef.current.material as THREE.MeshBasicMaterial;
       lerpColor(mat.color, tmpColor.set(cfg.color), 0.06);
-      mat.opacity = THREE.MathUtils.lerp(mat.opacity, 0.25 * cfg.pulseIntensity, 0.05);
+      mat.opacity = THREE.MathUtils.lerp(mat.opacity, 0.22 * cfg.pulseIntensity, 0.05);
     }
 
-    // Mid glow layer — brighter
+    // Mid glow layer
     if (midRef.current) {
-      midRef.current.scale.setScalar(0.22 * cfg.coreScale * pulse);
+      midRef.current.scale.setScalar(0.20 * cfg.coreScale * pulse);
       const mat = midRef.current.material as THREE.MeshBasicMaterial;
       lerpColor(mat.color, tmpColor.set(cfg.color), 0.06);
-      mat.opacity = THREE.MathUtils.lerp(mat.opacity, 0.6 * cfg.pulseIntensity, 0.05);
+      mat.opacity = THREE.MathUtils.lerp(mat.opacity, 0.55 * cfg.pulseIntensity, 0.05);
     }
 
-    // Inner white-hot core
+    // Restrained cyan halo (always cyan, wraps inner white-hot core)
+    if (cyanRef.current) {
+      cyanRef.current.scale.setScalar(0.12 * cfg.coreScale * pulse);
+      const mat = cyanRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = THREE.MathUtils.lerp(mat.opacity, 0.50 * cfg.pulseIntensity, 0.05);
+    }
+
+    // Inner white-hot center — slightly dimmed so cyan shows through
     if (innerRef.current) {
-      innerRef.current.scale.setScalar(0.09 * cfg.coreScale * pulse);
+      innerRef.current.scale.setScalar(0.08 * cfg.coreScale * pulse);
     }
 
-    // Primary light
+    // Primary coloured point light
     if (lightRef.current) {
       lerpColor(lightRef.current.color, tmpColor.set(cfg.color), 0.06);
       lightRef.current.intensity = THREE.MathUtils.lerp(
         lightRef.current.intensity,
-        4.0 * cfg.pulseIntensity * pulse,
+        3.5 * cfg.pulseIntensity * pulse,
         0.06,
       );
     }
 
-    // Secondary fill light (white, softer)
+    // Secondary white fill light (softer)
     if (light2Ref.current) {
       light2Ref.current.intensity = THREE.MathUtils.lerp(
         light2Ref.current.intensity,
-        1.5 * cfg.pulseIntensity * pulse,
+        1.2 * cfg.pulseIntensity * pulse,
         0.06,
       );
     }
@@ -242,7 +251,7 @@ function GlowingCore({ cfg }: { cfg: StateConfig }) {
         <meshBasicMaterial
           color={cfg.color}
           transparent
-          opacity={0.2}
+          opacity={0.18}
           depthWrite={false}
         />
       </mesh>
@@ -253,7 +262,18 @@ function GlowingCore({ cfg }: { cfg: StateConfig }) {
         <meshBasicMaterial
           color={cfg.color}
           transparent
-          opacity={0.5}
+          opacity={0.45}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Cyan halo — restrained glow wrapping the hot core */}
+      <mesh ref={cyanRef}>
+        <sphereGeometry args={[1, 16, 16]} />
+        <meshBasicMaterial
+          color="#00d4ff"
+          transparent
+          opacity={0.40}
           depthWrite={false}
         />
       </mesh>
@@ -264,7 +284,7 @@ function GlowingCore({ cfg }: { cfg: StateConfig }) {
         <meshBasicMaterial
           color="#ffffff"
           transparent
-          opacity={0.95}
+          opacity={0.85}
           depthWrite={false}
         />
       </mesh>
@@ -272,7 +292,7 @@ function GlowingCore({ cfg }: { cfg: StateConfig }) {
       {/* Coloured point light */}
       <pointLight ref={lightRef} color={cfg.color} intensity={3} distance={10} decay={2} />
       {/* White fill light */}
-      <pointLight ref={light2Ref} color="#ffffff" intensity={1} distance={6} decay={2} />
+      <pointLight ref={light2Ref} color="#ffffff" intensity={0.9} distance={5} decay={2} />
     </>
   );
 }
@@ -281,16 +301,16 @@ function GlowingCore({ cfg }: { cfg: StateConfig }) {
 function OrbParticles({ cfg }: { cfg: StateConfig }) {
   const pointsRef = useRef<THREE.Points>(null!);
 
-  const MAX = 32;
+  const MAX = 20;
   const { positions, seeds } = useMemo(() => {
     const pos = new Float32Array(MAX * 3);
     const sd = new Float32Array(MAX * 5); // angle, radius, speed, tiltPhase, tiltAmp
     for (let i = 0; i < MAX; i++) {
       sd[i * 5 + 0] = Math.random() * Math.PI * 2;          // angle
-      sd[i * 5 + 1] = 0.8 + Math.random() * 0.55;           // orbit radius
-      sd[i * 5 + 2] = 0.15 + Math.random() * 0.45;          // speed
+      sd[i * 5 + 1] = 1.05 + Math.random() * 0.28;          // orbit radius (just outside globe)
+      sd[i * 5 + 2] = 0.12 + Math.random() * 0.30;          // speed
       sd[i * 5 + 3] = Math.random() * Math.PI * 2;           // tilt phase
-      sd[i * 5 + 4] = 0.15 + Math.random() * 0.45;          // tilt amplitude
+      sd[i * 5 + 4] = 0.10 + Math.random() * 0.30;          // tilt amplitude
     }
     return { positions: pos, seeds: sd };
   }, []);
@@ -404,7 +424,7 @@ function AmbientGlow({ cfg }: { cfg: StateConfig }) {
     const mat = spriteRef.current.material as THREE.SpriteMaterial;
     lerpColor(mat.color, tmpColor.set(cfg.color), 0.04);
     const pulse = 1 + Math.sin(s.clock.elapsedTime * 1.5) * 0.06 * cfg.pulseIntensity;
-    spriteRef.current.scale.setScalar(4.5 * pulse);
+    spriteRef.current.scale.setScalar(3.5 * pulse);
     mat.opacity = THREE.MathUtils.lerp(mat.opacity, 0.15 * cfg.pulseIntensity, 0.04);
   });
 

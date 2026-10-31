@@ -1,5 +1,6 @@
-import { useCallback, useReducer } from 'react';
+import { useCallback, useReducer, useRef } from 'react';
 import type { AssistantState, TranscriptMessage } from '../types/jarvis';
+import { streamChatMessage } from '../api/jarvis';
 
 /* ── State shape ── */
 interface JarvisState {
@@ -14,6 +15,7 @@ interface JarvisState {
 type Action =
   | { type: 'SET_STATUS'; payload: AssistantState }
   | { type: 'ADD_MESSAGE'; payload: TranscriptMessage }
+  | { type: 'UPDATE_MESSAGE'; payload: { id: string; content: string } }
   | { type: 'SET_PANEL'; payload: string | null }
   | { type: 'CLEAR_TRANSCRIPT' };
 
@@ -24,6 +26,13 @@ function reducer(state: JarvisState, action: Action): JarvisState {
       return { ...state, status: action.payload };
     case 'ADD_MESSAGE':
       return { ...state, transcript: [...state.transcript, action.payload] };
+    case 'UPDATE_MESSAGE':
+      return {
+        ...state,
+        transcript: state.transcript.map(m =>
+          m.id === action.payload.id ? { ...m, content: action.payload.content } : m,
+        ),
+      };
     case 'SET_PANEL':
       return {
         ...state,
@@ -58,6 +67,9 @@ export function useJarvisState() {
     activePanel: null,
   });
 
+  /* Multi-turn: track the last interaction ID for conversation continuity */
+  const lastInteractionId = useRef<string | null>(null);
+
   const setStatus = useCallback((s: AssistantState) => {
     dispatch({ type: 'SET_STATUS', payload: s });
   }, []);
@@ -72,6 +84,7 @@ export function useJarvisState() {
 
   const clearTranscript = useCallback(() => {
     dispatch({ type: 'CLEAR_TRANSCRIPT' });
+    lastInteractionId.current = null;
   }, []);
 
   /** Demo loop — cycles through assistant states with sample dialogue. */
@@ -96,6 +109,75 @@ export function useJarvisState() {
     setTimeout(() => setStatus('LISTENING'), 11000);
   }, [setStatus, addMessage]);
 
+  /**
+   * Send a text message to the Gemini backend and stream the response
+   * incrementally into the transcript.
+   *
+   * State machine:
+   *   IDLE → THINKING (immediately, on submit)
+   *   THINKING → SPEAKING (on first SSE chunk — time-to-first-token)
+   *   SPEAKING → IDLE (2.5s after stream completes)
+   *   * → ERROR (on failure)
+   */
+  const sendMessage = useCallback(async (text: string) => {
+    // 1. Add user message and enter THINKING immediately.
+    addMessage('user', text);
+    setStatus('THINKING');
+
+    // 2. Insert a placeholder JARVIS message that will be updated in-place.
+    const jarvisId = crypto.randomUUID();
+    dispatch({
+      type: 'ADD_MESSAGE',
+      payload: { id: jarvisId, role: 'jarvis', content: '', timestamp: Date.now() },
+    });
+
+    let accumulated = '';
+    let firstChunk = true;
+
+    try {
+      await streamChatMessage(
+        { message: text, previous_interaction_id: lastInteractionId.current },
+        {
+          onChunk: (chunk) => {
+            accumulated += chunk;
+            dispatch({ type: 'UPDATE_MESSAGE', payload: { id: jarvisId, content: accumulated } });
+            // Transition to SPEAKING on the very first chunk (time-to-first-token).
+            if (firstChunk) {
+              firstChunk = false;
+              setStatus('SPEAKING');
+            }
+          },
+          onDone: (interactionId) => {
+            // Persist interaction ID for multi-turn continuity.
+            lastInteractionId.current = interactionId || null;
+            setStatus('SPEAKING');
+            setTimeout(() => setStatus('IDLE'), 2500);
+          },
+          onError: (message) => {
+            dispatch({
+              type: 'UPDATE_MESSAGE',
+              payload: {
+                id: jarvisId,
+                content: `I'm sorry, Sir. I encountered an error: ${message}`,
+              },
+            });
+            setStatus('ERROR');
+          },
+        },
+      );
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'Unknown error';
+      dispatch({
+        type: 'UPDATE_MESSAGE',
+        payload: {
+          id: jarvisId,
+          content: `I'm sorry, Sir. I encountered an error: ${detail}`,
+        },
+      });
+      setStatus('ERROR');
+    }
+  }, [addMessage, setStatus]);
+
   return {
     ...state,
     setStatus,
@@ -103,5 +185,6 @@ export function useJarvisState() {
     setPanel,
     clearTranscript,
     simulateSession,
+    sendMessage,
   };
 }

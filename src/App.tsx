@@ -4,6 +4,7 @@ import { TranscriptPanel } from './components/TranscriptPanel';
 import { ControlBar } from './components/ControlBar';
 import { NavSidebar } from './components/NavSidebar';
 import { WaveformVisualizer } from './components/WaveformVisualizer';
+import { CommandInput } from './components/CommandInput';
 import { STATE_CONFIGS } from './types/jarvis';
 import { useJarvisState } from './hooks/useJarvisState';
 import './App.css';
@@ -17,6 +18,7 @@ function App() {
     setStatus,
     setPanel,
     simulateSession,
+    sendMessage,
   } = useJarvisState();
 
   const cfg = STATE_CONFIGS[status];
@@ -66,6 +68,9 @@ function App() {
 
         {/* Waveform */}
         <WaveformVisualizer state={status} />
+
+        {/* Text command input — connected to Gemini backend */}
+        <CommandInput state={status} onSend={sendMessage} />
 
         {/* Controls */}
         <ControlBar
