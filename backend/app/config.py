@@ -41,6 +41,15 @@ MAX_HISTORY_TURNS: int = int(os.getenv("MAX_HISTORY_TURNS", "20"))
 # Interactions API first-token latency can be 30-60 s; default 90 s gives headroom.
 GEMINI_TIMEOUT_SECONDS: float = float(os.getenv("GEMINI_TIMEOUT_SECONDS", "90"))
 
+# The same generation options are applied to every interaction in a chain.
+# Keep this empty unless model generation settings are explicitly configured.
+GEMINI_GENERATION_CONFIG: dict[str, object] = {}
+
+# Delay between status checks for the legacy synchronous /api/chat endpoint.
+GEMINI_POLL_INTERVAL_SECONDS: float = float(
+    os.getenv("GEMINI_POLL_INTERVAL_SECONDS", "1.5")
+)
+
 # CORS origins allowed during development.
 CORS_ORIGINS: list[str] = [
     o.strip()

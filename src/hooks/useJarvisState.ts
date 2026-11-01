@@ -114,15 +114,16 @@ export function useJarvisState() {
    * incrementally into the transcript.
    *
    * State machine:
-   *   IDLE → THINKING (immediately, on submit)
-   *   THINKING → SPEAKING (on first SSE chunk — time-to-first-token)
-   *   SPEAKING → IDLE (2.5s after stream completes)
+   *   IDLE → CONNECTING (create background interaction)
+   *   CONNECTING → THINKING (interaction ID accepted)
+   *   THINKING → SPEAKING (first streamed chunk)
+   *   SPEAKING → COMPLETED → IDLE
    *   * → ERROR (on failure)
    */
   const sendMessage = useCallback(async (text: string) => {
-    // 1. Add user message and enter THINKING immediately.
+    // 1. Add user message and connect to the backend.
     addMessage('user', text);
-    setStatus('THINKING');
+    setStatus('CONNECTING');
 
     // 2. Insert a placeholder JARVIS message that will be updated in-place.
     const jarvisId = crypto.randomUUID();
@@ -138,6 +139,9 @@ export function useJarvisState() {
       await streamChatMessage(
         { message: text, previous_interaction_id: lastInteractionId.current },
         {
+          onStarted: () => {
+            setStatus('THINKING');
+          },
           onChunk: (chunk) => {
             accumulated += chunk;
             dispatch({ type: 'UPDATE_MESSAGE', payload: { id: jarvisId, content: accumulated } });
@@ -147,10 +151,18 @@ export function useJarvisState() {
               setStatus('SPEAKING');
             }
           },
+          onReplace: (completeText) => {
+            accumulated = completeText;
+            dispatch({ type: 'UPDATE_MESSAGE', payload: { id: jarvisId, content: accumulated } });
+            if (firstChunk && completeText) {
+              firstChunk = false;
+              setStatus('SPEAKING');
+            }
+          },
           onDone: (interactionId) => {
             // Persist interaction ID for multi-turn continuity.
             lastInteractionId.current = interactionId || null;
-            setStatus('SPEAKING');
+            setStatus('COMPLETED');
             setTimeout(() => setStatus('IDLE'), 2500);
           },
           onError: (message) => {

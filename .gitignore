@@ -23,6 +23,7 @@ __pycache__/
 .venv/
 venv/
 backend/.env
+backend/.venv-repair/
 *.egg-info/
 
 # Editor directories and files

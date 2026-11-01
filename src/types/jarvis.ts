@@ -8,6 +8,7 @@ export type AssistantState =
   | 'LISTENING'
   | 'THINKING'
   | 'SPEAKING'
+  | 'COMPLETED'
   | 'MUTED'
   | 'ERROR';
 
@@ -79,6 +80,16 @@ export const STATE_CONFIGS: Record<AssistantState, StateConfig> = {
     particleCount: 28,
     pulseIntensity: 0.9,
     coreScale: 1.1,
+  },
+  COMPLETED: {
+    label: 'COMPLETED',
+    color: '#36c98f',
+    rgb: [54, 201, 143],
+    description: 'Response complete',
+    ringSpeed: 0.25,
+    particleCount: 18,
+    pulseIntensity: 0.45,
+    coreScale: 0.9,
   },
   MUTED: {
     label: 'MUTED',
